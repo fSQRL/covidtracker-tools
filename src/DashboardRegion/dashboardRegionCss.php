@@ -1,4 +1,16 @@
 <style>
+
+    .btn-autre {
+        border: 1px solid;
+        margin: 10px;
+        padding: 15px;
+        font-size : 16px;
+        transition-duration: 0.4s;
+        background-color: #ffffff;
+        border-radius: 15px;
+
+    }
+
     .shadow {
         border: 0px solid black;
         padding: 12px;
@@ -22,7 +34,7 @@
 
     #map path {
         fill: #c4c4cb;
-        stroke: #000;
+        stroke: #FFF !important;
         stroke-width: 0.9;
         transition: fill 0.2s, stroke 0.3s;
         z-index: 1000;

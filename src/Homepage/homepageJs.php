@@ -20,8 +20,8 @@
             updateHospitDiv('rea');
             //calculerProjection();
 
-            buildLineChart("cas_spf");
-            dataSelectedCas("cas_spf")
+            buildLineChart("cas");
+            dataSelectedCas("cas")
             buildBarChart('rea');
 
         })
@@ -30,7 +30,7 @@
             }
         )
 
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/opencovid.json')
+    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/vue-ensemble.json')
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -85,7 +85,7 @@
         )
 
     function updateDataDivOpenCovid(){
-        var cas_open_covid = data_opencovid["cas"]
+        var cas_open_covid = numberWithSpaces(data_opencovid["cas"])
         if(cas_open_covid<=0){
             cas_open_covid = "--"
         }
@@ -178,11 +178,17 @@
             "cas": ["On prélève en moyenne", ""],
             "cas_spf": ["En moyenne", "sont remontés "]
         }
+        type_jour = {
+            "cas": "(par date de prélèvement, J-3)",
+            "cas_spf": "(par date de remontée, J-0)"
+        }
         document.getElementById("cas_p1").innerHTML = phrase[selected_data][0];
         document.getElementById("cas_p2").innerHTML = phrase[selected_data][1];
 
         cas_actu = data[selected_data]["values"][data[selected_data]["values"].length-1]
         document.getElementById("cas_moyen_quotidien").innerHTML = numberWithSpaces(cas_actu);
+
+        document.getElementById("type_jour").innerHTML = type_jour[selected_data];
 
         cas_j7 = data[selected_data]["values"][data[selected_data]["values"].length-8]
 
