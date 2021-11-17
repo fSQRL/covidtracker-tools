@@ -1,8 +1,7 @@
 <h2 style="margin-top: 40px;">
     Quand l'immunité collective sera-t-elle atteinte ?
 </h2>
-Sur VaccinTracker, le taux de 60% a été choisi comme seuil d'immunité collective. Cependant, on ne peut pas
-aujourd'hui connaître ce taux précisément.
+On ne peut pas aujourd'hui connaître le taux d'immunité collective précisément.
 La vidéo suivante du média Le Monde explique très bien la problématique à notre sens :
 <br><br>
 <div class="videoWrapper">
@@ -30,31 +29,65 @@ et 15 à 27 millions d'ici à juillet.
     </li>
 </ul>
 
-<h3 style="margin-top : 50px;">Début février</h3>
+<h3 style="margin-top : 50px;">6 février</h3>
 <ul>
-    <li>Tous les professionnels de Santé. 
+    <li>Tous les professionnels de Santé et du secteur médico-social, aux aides à domicile intervenant auprès de personnes vulnérables et aux sapeurs-pompiers quel que soit leur âge.
     </li>
 </ul>
 
-<h3 style="margin-top : 50px;">31 mars</h3>
+<h3 style="margin-top : 50px;">19 février</h3>
+<ul>
+    <li>Personnes de plus de 50 ans atteintes de comorbidité(s).
+    </li>
+</ul>
+
+
+<h3 style="margin-top : 50px;">27 mars</h3>
 <ul>
     <li>Personnes âgées de plus de 70 ans,</li>
     <li>Personnes à risque de plus de 50 ans.</li>
 </ul>
 
-<h3 style="margin-top : 50px;">16 avril</h3>
+<h3 style="margin-top : 50px;">8 avril</h3>
 <ul>
-    <li>Personnes âgées de plus de 60 ans,</li>
-    <li>Les enseignants qui le désirent.</li>
+    <li>Femmes enceintes.</li>
 </ul>
 
-<h3 style="margin-top : 50px;">15 mai</h3>
+<h3 style="margin-top : 50px;">12 avril</h3>
 <ul>
-    <li>Personnes de 50 ans et plus.
-    </li>
+    <li>Personnes âgées de plus de 55 ans.</li>
 </ul>
 
-<h3 style="margin-top : 50px;">Été</h3>
+<h3 style="margin-top : 50px;">1 mai</h3>
 <ul>
-    <li>Ensemble de la population.</li>
+    <li>Personnes à risque de plus de 18 ans.</li>
 </ul>
+
+
+<h3 style="margin-top : 50px;">10 mai</h3>
+<ul>
+    <li>Personnes âgées de plus de 50 ans.</li>
+</ul>
+
+<h3 style="margin-top : 50px;">12 mai</h3>
+<ul>
+    <li>Ensemble de la population de plus de 18 ans en cas de créneaux libres (Si et seulement si un créneau de vaccination est disponible la veille pour le lendemain).</li>
+</ul>
+
+<h3 style="margin-top : 50px;">24 mai</h3>
+<ul>
+    <li>Professionnels considérés comme plus exposés au virus, parmi lesquels le personnel éducatif, les forces de l'ordre, les chauffeurs, les métiers de la bouche, mais aussi d'autres professions ayant un contact avec le public.</li>
+</ul>
+
+<h3 style="margin-top : 50px;">31 mai</h3>
+<ul>
+    <li>Ensemble de la population de plus de 18 ans.</li>
+</ul>
+
+<h3 style="margin-top : 50px;">15 juin</h3>
+<ul>
+    <li>Ensemble de la population de plus de 12 ans.</li>
+</ul>
+
+Sources:
+<a target="_blank" title="Calendrier de la campagne de vaccination" href="https://solidarites-sante.gouv.fr/grands-dossiers/vaccin-covid-19/je-suis-un-particulier/article/foire-aux-questions-le-calendrier">Calendrier de la campagne de vaccination</a>

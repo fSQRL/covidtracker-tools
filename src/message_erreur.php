@@ -1,5 +1,4 @@
-<!--<div class="alert alert-warning" role="alert">
-    <i>13 avril à 22h •</i><b>  Données incomplètes</b><br>
-    En raison de la publication de données incomplètes par Santé publique France, CovidTracker n'a pas pu être mis à jour le 13 avril. Il sera de nouveau à jour lors de la publication de l'ensemble des données.
+<div class="alert alert-warning" role="alert">
+    <i>05 novembre •</i><b> Jours fériés : baisse artificielle des cas</b><br>
+    Les données épidémiques (nombre de cas, nombre de tests) sont sous évaluées en raison de la présence de jours fériés (1er et 11 novembre). Les données hospitalières sont faiblement impactées.
 </div>
--->

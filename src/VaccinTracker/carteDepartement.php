@@ -10,21 +10,18 @@
                 <div id="carte" style="margin-top:20px;">
                     <?php include(__DIR__ . '/../DashboardDepartement/carteDepartements.php'); ?>
                 </div>
+
             </div>
             <div id="legendeCarte" class="col-xs-2">
 
             </div>
+
+        </div>
+        <div class="alert alert-info">
+            05 octobre 2021 : attention, depuis ce jour la carte affiche le nombre de personnes vaccinées par lieu de résidence, et non plus par lieu d'injection. Une personne habitant à Paris et vaccinée dans les Yvelines est désormais comptaibilisée à Paris.
         </div>
     </div>
     <div class="col-md-6" style="" id="donneesDepartements">
-<!--        <div id="departement-graphique">-->
-<!--            <div id="departement-general">-->
-<!--                <h4 id="titre_map" class="" style="display: inline-block"> Nombre de doses injectées :</h4>-->
-<!--                <div class="chart-container" style="margin-top: 20px; position: relative; height:50vh; width:100%">-->
-<!--                    <canvas id="chartDepartements" style="margin-top:0px; max-height: 700px; max-width: 900px;"></canvas>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
     </div>
 </div>
 
@@ -45,10 +42,10 @@
                     </svg>
                 </a>
             </h2>
-            <span style="font-size: 160%; color: black"><b>vaccinesDepartement</b></span><br>
+            <span style="font-size: 160%; color: black"><b>vaccinesDepartement</b></span>%<br>
             <span>
                 <b>Personnes ayant reçu une dose</b><br>
-                Nombre cumulé de personnes ayant reçu au moins une dose de vaccin, soit vaccinesPopReg% des habitants.
+                Proportion cumulée de personnes ayant reçu au moins une dose de vaccin.
             <br></span>
             <span style="font-size: 70%;">Mise à jour : dateMajDoses</span>
 
@@ -64,7 +61,7 @@
                 </div>
             </div>
             <br>
-            <div id="departement-graphique-age">
+            <div id="departement-graphique-age" style="display: none">
                 <div class="chart-container" style="position: relative; height:250px; width:100%">
                     <canvas id="chartDepartementAge"
                             style="margin-top:0px; max-height: 700px; max-width: 900px;"></canvas>

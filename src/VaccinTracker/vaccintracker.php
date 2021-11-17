@@ -1,4 +1,5 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.7.3/dist/Chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/0.5.7/chartjs-plugin-annotation.min.js"
         integrity="sha512-9hzM/Gfa9KP1hSBlq3/zyNF/dfbcjAYwUTBWYX+xi8fzfAPHL3ILwS1ci0CTVeuXTGkRAWgRMZZwtSNV7P+nfw=="
         crossorigin="anonymous"></script>
@@ -7,6 +8,7 @@
         crossorigin="anonymous"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-deferred@1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@1"></script>
 
 
 <?php include(dirname(__DIR__) . '/message_erreur.php') ?>
@@ -41,48 +43,16 @@
 <!-- /wp:html -->
 
 <?php include(__DIR__.'/resume.php'); ?>
-<p style="font-size: 80%; padding-top: 17px;"><i><b>* 10 avril 2021 - Information sur les données de livraisons de vaccins.</b> Les données de livraison de vaccins fournies par le Ministère de la Santé considèrent que toutes les doses sont livrées le dimanche de chaque semaine. Or, les livraisons sont en réalité étalées sur toute la semaine. Cela entraine des graphiques où, sur certains jours, les courbes des injections dépassent les courbes des livraisons. Pour cette raison, à partir d'aujourd'hui nous considérerons que les livraisons sont effectuées le jeudi de chaque semaine, et non plus le dimanche.</i>  </p>
+<!--<p style="font-size: 80%; padding-top: 17px;"><i><b>* 10 avril 2021 - Information sur les données de livraisons de vaccins.</b> Les données de livraison de vaccins fournies par le Ministère de la Santé considèrent que toutes les doses sont livrées le dimanche de chaque semaine. Or, les livraisons sont en réalité étalées sur toute la semaine. Cela entraine des graphiques où, sur certains jours, les courbes des injections dépassent les courbes des livraisons. Pour cette raison, à partir d'aujourd'hui nous considérerons que les livraisons sont effectuées le jeudi de chaque semaine, et non plus le dimanche.</i>  </p>-->
 
 
 <?php include(__DIR__.'/proportionVaccines.php'); ?>
 <?php include(__DIR__.'/evolution.php'); ?>
-<?php include(__DIR__.'/typesVaccins.php'); ?>
 <?php include(__DIR__.'/repartition.php'); ?>
-
-<div class="alert alert-info clearFix" style="font-size: 18px;">
-    <div class="row">
-        <div class="col-md-8">
-            <small>À VOIR AUSSI...</small>
-            <br>
-            Combien de personnes reste-t-il à vacciner avant vous ? Estimez votre temps d'attente en fonction du rythme
-            actuel de vaccination.<br>
-        </div>
-        <div class="col-md-4 text-right">
-            <button class="btn-shadow">
-                <a href="https://covidtracker.fr/vaccinplanner" target="_blank" rel="noreferrer noopener">Accéder à 🗓
-                    <b>VaccinPlanner</b></a>
-            </button> &nbsp;&nbsp;
-        </div>
-    </div>
-</div>
+<?php include(__DIR__. '/vaccinationsParAge.php') ?>
+<?php include(__DIR__.'/typesVaccins.php'); ?>
 
 <?php include(__DIR__ . '/vaccinationEHPAD.php') ?>
-<?php include(__DIR__ . '/vaccinationsParAge.php') ?>
-
-
-<div class="alert alert-warning" style="font-size: 18px; margin-top:40px; margin-bottom: 20px;">
-    <b>29 janvier - Information sur les données.</b> <i>Provenance des données</i> : jusqu’alors les données étaient
-    remontées manuellement par les ARS au Ministère de la Santé. Désormais, le Système d’Information VAC-SI est utilisé.
-    De petits écarts peuvent temporairement être observés le temps que toutes les données soient saisies. Les données du
-    jour concerneront désormais J-1. <i>Type des données</i> : les données concernent désormais le nombre de personnes
-    ayant reçu une dose (non plus le nombre de doses injectées). <a
-            href="https://solidarites-sante.gouv.fr/actualites/presse/communiques-de-presse/article/le-suivi-de-la-couverture-vaccinale-desormais-opere-via-vaccin-covid">Plus
-        d'informations</a>.
-</div>
-
-<?php include(__DIR__ . '/vaccin-map.html') ?>
-<?php include(__DIR__ . '/autorisations.php') ?>
-<?php include(__DIR__ . '/immuniteCollective.php') ?>
 <?php include(__DIR__ . '/dansLeMonde.php') ?>
 <br>
 <br>

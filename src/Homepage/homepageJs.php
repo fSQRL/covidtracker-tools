@@ -4,8 +4,11 @@
     var data_sidep;
     var projection_cas = [];
     var data_indicateurs;
+    var data_vaccination;
 
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/objectif_deconfinement.json')
+    //window.alert("Santé publique France a publié des données incomplètes et erronées ce soir. Nous les avons contactés. CovidTracker sera de nouveau à jour dès leur correction.");
+
+    fetch('https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/data/france/stats/objectif_deconfinement.json')
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -18,11 +21,14 @@
             //buildBarChart();
             updateDataDiv();
             updateHospitDiv('rea');
-            //calculerProjection();
+            updateAdmHospitDiv('adm_rea');
+            updateDcDiv("dc");
 
             buildLineChart("cas");
+            buildLineChartAdmHosp("adm_rea");
             dataSelectedCas("cas")
             buildBarChart('rea');
+            buildDcLineChart();
 
         })
         .catch(function () {
@@ -30,7 +36,26 @@
             }
         )
 
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/vue-ensemble.json')
+    fetch('https://raw.githubusercontent.com/rozierguillaume/vaccintracker/main/data/output/vacsi-fra.json')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+        }
+        return response.json();
+    })
+    .then(json => {
+        data_vaccination = json;
+        buildChartVaccination(data_vaccination);
+        updateDivVaccination(data_vaccination);
+
+    })
+    .catch(function () {
+            this.dataError = true;
+        }
+    )
+
+
+    fetch('https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/data/france/stats/vue-ensemble.json')
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -48,7 +73,7 @@
             }
         )
 
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/cas_sidep.json')
+    fetch('https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/data/france/stats/cas_sidep.json')
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -66,7 +91,7 @@
             }
         )
 
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/stats.json')
+    fetch('https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/data/france/stats/stats.json')
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -91,6 +116,28 @@
         }
         document.getElementById("cas_opencovid").innerHTML = cas_open_covid;
         document.getElementById("date_opencovid").innerHTML = data_opencovid["update"];
+    }
+
+    function updateDivVaccination(data){
+        let N = data["n_dose3_moyenne7j"].length;
+        value_today = data["n_dose3_moyenne7j"][N-1];
+        value_j7 = data["n_dose3_moyenne7j"][N-8];
+        variation = Math.round((value_today-value_j7)/value_j7*100);
+
+        document.getElementById("nb_injections_jour").innerHTML = numberWithSpaces(value_today);
+
+        if (variation>0){
+            document.getElementById("nb_injections_variation").innerHTML = "en hausse (+ " + variation + " %)";
+            document.getElementById("nb_injections_variation").className = "taux_croissance_baisse"; //c'est normal, c'est inversé
+        } else {
+            document.getElementById("nb_injections_variation").innerHTML = "en baisse (" + variation + " %)";
+            document.getElementById("nb_injections_variation").className = "taux_croissance_hausse";
+        }
+
+        proportion_vaccines = Math.round(data["n_cum_dose1"][N-1]/67400)/10;
+        document.getElementById("vaccination_proportion_population").innerHTML = proportion_vaccines;
+        
+
     }
 
     function updateDataDivSidep(){
@@ -124,9 +171,20 @@
 
         document.getElementById("rea-ligne").classList.remove("selected")
         document.getElementById("hosp-ligne").classList.remove("selected")
-        document.getElementById("dc-ligne").classList.remove("selected")
 
         document.getElementById(selected_data + "-ligne").classList.add("selected")
+        
+    }
+
+    function dataSelectedAdmHosp(selected_data){
+        lineChartAdmHosp.destroy();
+        updateAdmHospitDiv(selected_data)
+        buildLineChartAdmHosp(selected_data)
+
+        document.getElementById("adm_rea_ligne").classList.remove("selected")
+        document.getElementById("adm_hosp_ligne").classList.remove("selected")
+
+        document.getElementById(selected_data + "_ligne").classList.add("selected")
         
     }
 
@@ -145,15 +203,12 @@
 
     function updateHospitDiv(dataSelected){
         if(dataSelected=="rea"){
-            dataSelectedString="en réanimation"
-            dataSelectedStringTitle="Réanimations"
+            dataSelectedString="en soins critiques"
+            dataSelectedStringTitle="Soins critiques"
         } else if(dataSelected=="hosp"){
             dataSelectedString="hospitalisées"
             dataSelectedStringTitle="Hospitalisations"
-        } else if(dataSelected=="dc"){
-            dataSelectedString="décédées à l'hôpital"
-            dataSelectedStringTitle="Décès hospitaliers"
-        }
+        } 
         document.getElementById("typePersonnes").innerHTML = dataSelectedString;
         document.getElementById("titreHospitDiv").innerHTML = dataSelectedStringTitle;
 
@@ -163,12 +218,63 @@
         update_date = data["rea"]["dates"][data["rea"]["dates"].length-1]
         update_date = update_date.slice(8) + "/" + update_date.slice(5, 7);
 
-        document.getElementById("reanimations").innerHTML = numberWithSpaces(val_actu);
+        document.getElementById("reanimations").innerHTML = numberWithSpaces(val_actu.toFixed());
 
         if (val_j7 > val_actu){
-            document.getElementById("croissance_rea").innerHTML = "en baisse (-&nbsp;" + Math.round(Math.abs((val_actu-val_j7)/val_j7*100))+ "&nbsp;%) ";
+            document.getElementById("croissance_rea").innerHTML = "en baisse (-&nbsp;" + Math.round(Math.abs((val_actu-val_j7)/val_j7*100))+ "&nbsp;%)";
+            document.getElementById("croissance_rea").className = "taux_croissance_baisse"
         } else {
-            document.getElementById("croissance_rea").innerHTML = "en hausse (+&nbsp;" + Math.round((val_actu-val_j7)/val_j7*100)+ "&nbsp;%) ";
+            document.getElementById("croissance_rea").innerHTML = "en hausse (+&nbsp;" + Math.round((val_actu-val_j7)/val_j7*100)+ "&nbsp;%)";
+            document.getElementById("croissance_rea").className = "taux_croissance_hausse"
+        }
+
+    }
+
+    function updateAdmHospitDiv(dataSelected){
+        if(dataSelected=="adm_rea"){
+            dataSelectedString="admissions en soins critiques"
+            dataSelectedStringTitle="Adm. soins critiques"
+        } else if(dataSelected=="adm_hosp"){
+            dataSelectedString="admissions à l'hôpital"
+            dataSelectedStringTitle="Admissions hôpital"
+        } 
+        document.getElementById("typePersonnesAdm").innerHTML = dataSelectedString;
+        document.getElementById("titreAdmissionsHospitDiv").innerHTML = dataSelectedStringTitle;
+
+        val_actu = data[dataSelected]["values"][data[dataSelected]["values"].length-1]
+        val_j7 = data[dataSelected]["values"][data[dataSelected]["values"].length-8]
+
+        update_date = data["rea"]["dates"][data["adm_rea"]["dates"].length-1]
+        update_date = update_date.slice(8) + "/" + update_date.slice(5, 7);
+
+        document.getElementById("adm-hospit-value").innerHTML = numberWithSpaces(val_actu.toFixed());
+
+        if (val_j7 > val_actu){
+            document.getElementById("croissance-adm-hospit").innerHTML = "en baisse (-&nbsp;" + Math.round(Math.abs((val_actu-val_j7)/val_j7*100))+ "&nbsp;%)";
+            document.getElementById("croissance-adm-hospit").className = "taux_croissance_baisse"
+        } else {
+            document.getElementById("croissance-adm-hospit").innerHTML = "en hausse (+&nbsp;" + Math.round((val_actu-val_j7)/val_j7*100)+ "&nbsp;%)";
+            document.getElementById("croissance-adm-hospit").className = "taux_croissance_hausse"
+        }
+
+    }
+
+    function updateDcDiv(dataSelected="dc"){
+
+        val_actu = data[dataSelected]["values"][data[dataSelected]["values"].length-1]
+        val_j7 = data[dataSelected]["values"][data[dataSelected]["values"].length-8]
+
+        update_date = data["rea"]["dates"][data["dc"]["dates"].length-1]
+        update_date = update_date.slice(8) + "/" + update_date.slice(5, 7);
+
+        document.getElementById("dc_value").innerHTML = numberWithSpaces(val_actu.toFixed());
+
+        if (val_j7 > val_actu){
+            document.getElementById("croissance_dc").innerHTML = "en baisse (-&nbsp;" + Math.round(Math.abs((val_actu-val_j7)/val_j7*100))+ "&nbsp;%)";
+            document.getElementById("croissance_dc").className = "taux_croissance_baisse"
+        } else {
+            document.getElementById("croissance_dc").innerHTML = "en hausse (+&nbsp;" + Math.round((val_actu-val_j7)/val_j7*100)+ "&nbsp;%)";
+            document.getElementById("croissance_dc").className = "taux_croissance_hausse"
         }
 
     }
@@ -186,16 +292,18 @@
         document.getElementById("cas_p2").innerHTML = phrase[selected_data][1];
 
         cas_actu = data[selected_data]["values"][data[selected_data]["values"].length-1]
-        document.getElementById("cas_moyen_quotidien").innerHTML = numberWithSpaces(cas_actu);
+        document.getElementById("cas_moyen_quotidien").innerHTML = numberWithSpaces(cas_actu.toFixed());
 
         document.getElementById("type_jour").innerHTML = type_jour[selected_data];
 
         cas_j7 = data[selected_data]["values"][data[selected_data]["values"].length-8]
 
         if (cas_j7 > cas_actu){
-            document.getElementById("croissance_cas").innerHTML = "en baisse (-&nbsp;" + Math.round(Math.abs((cas_actu-cas_j7)/cas_j7*100))+ "&nbsp;%) ";
+            document.getElementById("croissance_cas").innerHTML = "en baisse (-&nbsp;" + Math.round(Math.abs((cas_actu-cas_j7)/cas_j7*100))+ "&nbsp;%)";
+            document.getElementById("croissance_cas").className = "taux_croissance_baisse"
         } else {
-            document.getElementById("croissance_cas").innerHTML = "en hausse (+&nbsp;" + Math.round((cas_actu-cas_j7)/cas_j7*100)+ "&nbsp;%) ";
+            document.getElementById("croissance_cas").innerHTML = "en hausse (+&nbsp;" + Math.round((cas_actu-cas_j7)/cas_j7*100)+ "&nbsp;%)";
+            document.getElementById("croissance_cas").className = "taux_croissance_hausse"
         }
     }
 
@@ -237,7 +345,7 @@
                     label: 'Cas positifs',
                     data: data[selected_data]["values"],
                     borderWidth: 3,
-                    pointRadius: 1,
+                    pointRadius: 0,
                     backgroundColor: 'rgba(0, 168, 235, 0.5)',
                     borderColor: 'rgba(0, 168, 235, 1)'
                 },
@@ -296,12 +404,13 @@
                             scaleID: "y-axis-0",
                             value: 5000,
                             borderColor: "green",
-                            borderWidth: 3,
+                            borderWidth: 2,
                             label: {
                                 backgroundColor: "green",
                                 content: "Objectif",
                                 enabled: true
                             },
+                            borderDash: [6, 2],
                             onClick: function(e) {
                                 //console.log("Annotation", e.type, this);
                             }
@@ -312,12 +421,90 @@
         });
     }
 
+    var lineChartAdmHosp;
+    function buildLineChartAdmHosp(selected_data){ 
+
+        selected_color_background = 'rgba(201, 4, 4, 0.5)';
+        selected_color_border = 'rgba(201, 4, 4, 1)'; 
+        if (selected_data=="adm_hosp"){
+            selected_color_background = 'rgba(209, 102, 21,0.3)';
+            selected_color_border = 'rgba(209, 102, 21,1)';
+        }
+
+        var ctx = document.getElementById('admHospitChart').getContext('2d');
+
+        lineChartAdmHosp = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data[selected_data]["dates"],
+                datasets: [{
+                    label: 'Cas positifs',
+                    data: data[selected_data]["values"],
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    backgroundColor: selected_color_background,
+                    borderColor: selected_color_border
+                },
+                    {
+                        label: 'Projection cas positifs',
+                        data: projection_cas
+                    }]
+            },
+            options: {
+                plugins: {
+                    deferred: {
+                        xOffset: 150,   // defer until 150px of the canvas width are inside the viewport
+                        yOffset: '50%', // defer until 50% of the canvas height are inside the viewport
+                        delay: 100      // delay of 500 ms after the canvas is considered inside the viewport
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                scales: {
+                    yAxes: [{
+                        gridLines: {
+                            display: true
+                        },
+                        ticks: {
+                            min: 0,
+                            userCallback: function(value, index, values) {
+                                return value/1000+"k"
+                            }
+                        },
+
+                    }],
+                    xAxes: [{
+                        gridLines: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            maxTicksLimit: 6,
+                            callback: function(value, index, values) {
+                                return value.slice(8) + "/" + value.slice(5, 7);
+                            }
+                        }
+
+                    }]
+                },
+                annotation: {
+                    events: ["click"],
+                    annotations: [
+                        
+                    ]
+                }
+            }
+        });
+    }
+
     var lineChartDc;
     function buildDcLineChart(){
         
-        var ctx = document.getElementById('barChart').getContext('2d');
+        var ctx = document.getElementById('barChartDc').getContext('2d');
 
-        barChart = new Chart(ctx, {
+        lineChartDc = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: data["dc"]["dates"],
@@ -325,7 +512,7 @@
                     label: 'Décès hospitaliers ',
                     data: data["dc"]["values"],
                     borderWidth: 3,
-                    pointRadius: 1,
+                    pointRadius: 0,
                     backgroundColor: 'rgba(0,0,0,0.4)',
                     borderColor: 'rgba(0,0,0,1)'
                 }]
@@ -430,25 +617,66 @@
             projection_rea.push(Math.round(data_rea[data_rea.length-1] * (1-croissance_rea)**idx))
         }
 
-
-        // Emoji de couleur
-
-        
-        buildLineChartDc();
-        buildBarChartHosp();
-
     }
     function buildBarChart(dataSelected){
         if(dataSelected=='rea'){
             buildReaBarChart()
         } else if(dataSelected=='hosp'){
             buildHospBarChart()
-        } else if(dataSelected=='dc'){
-            buildDcLineChart()
         }
     }
 
-    var barChart
+    var lineChartVaccnation;
+    function buildChartVaccination(data){
+        lineChartVaccnation = new Chart(document.getElementById("line-chart-vaccination"), {
+            type: 'line',
+            data: {
+            labels: data["dates"].slice(-100, -1),
+            datasets: [
+                {
+                label: "",
+                backgroundColor: "rgba(185, 235, 203, 0.6)",
+                borderColor: "#9bc9ac",
+                data: data["n_dose3_moyenne7j"].slice(-100, -1),
+                pointRadius: 0
+                }
+            ]
+            },
+            options: {
+            legend: { display: false },
+            scales: {
+                xAxes: [{
+                            gridLines: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 0,
+                                minRotation: 0,
+                                maxTicksLimit: 6,
+                                callback: function(value, index, values) {
+                                    return value.slice(8) + "/" + value.slice(5, 7);
+                                }
+                            }
+
+                        }],
+                yAxes: [{
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return value/1000 + " k";
+                        }
+                    }
+
+                }]
+            },
+            title: {
+                display: false,
+                text: ''
+            }
+            }
+        });
+    }
+
+    var barChart;
     function buildReaBarChart(){
 
         var ctx = document.getElementById('barChart').getContext('2d');
@@ -458,7 +686,7 @@
             data: {
                 labels: data["rea"]["dates"],
                 datasets: [{
-                    label: 'Personnes en réanimation',
+                    label: 'Personnes en soins critiques',
                     data: data["rea"]["values"],
                     borderWidth: 0.5,
                     backgroundColor: 'rgba(201, 4, 4, 0.5)',
@@ -513,12 +741,13 @@
                             scaleID: "y-axis-0",
                             value: 3000,
                             borderColor: "green",
-                            borderWidth: 3,
+                            borderWidth: 2,
                             label: {
                                 backgroundColor: "green",
                                 content: "Objectif",
-                                enabled: true
+                                enabled: true,
                             },
+                            borderDash: [6, 2],
                             onClick: function(e) {
                                 console.log("Annotation", e.type, this);
                             }
@@ -597,12 +826,13 @@
                             scaleID: "y-axis-0",
                             value: 34000,
                             borderColor: "red",
-                            borderWidth: 3,
+                            borderWidth: 2,
                             label: {
                                 backgroundColor: "red",
                                 content: "Max. observé",
                                 enabled: true
                             },
+                            borderDash: [6, 2],
                             onClick: function(e) {
                                 console.log("Annotation", e.type, this);
                             }

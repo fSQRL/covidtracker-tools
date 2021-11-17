@@ -18,8 +18,9 @@
                         <option value="france">France</option>
                     </optgroup>
                     
-                </select>      
-                <br><br>          
+                </select> 
+                <br>
+                <input type='checkbox' id='type_cumsum' onchange="type_cumSumChecked()" style="margin-bottom:10px;"> Somme cumulée         
                 </div>
             <br>
             <label>Données à afficher</label>
@@ -35,8 +36,12 @@
                     <div class='checkbox'><label> <input type='checkbox' id="types_incid_reanimations" onchange='boxTypeChecked("incid_reanimations")'>Admissions en réanimation </label></div> <br>
                     <div class='checkbox'><label> <input type='checkbox' id="types_deces_hospitaliers" onchange='boxTypeChecked("deces_hospitaliers")'>Décès hospitaliers </label></div> <br>
                     <div class='checkbox'><label> <input type='checkbox' id="types_n_cum_dose1" onchange='boxTypeChecked("n_cum_dose1")'>Personnes vaccinées </label></div> <br>
+                    <!--<div class='checkbox'><label> <input type='checkbox' id="types_obepine" onchange='boxTypeChecked("obepine")'>Eaux usées (Obépine) </label></div> <br>-->
             </div>
-
+            <br>
+            Animation<br>
+            <a id="myLink" onclick="animation_types();"><i class="material-icons" style="cursor: pointer;">play_arrow</i></a>
+            <a id="stop" onclick="stopExec_types();"><i class="material-icons" style="cursor: pointer;">stop</i></a>
             <br>
         </div>
         
@@ -89,7 +94,7 @@ var types_dataExplorerAgeChart;
 var types_selected_age_data=["incidence"];
 var data;
 var age_seq = palette('mpn65', 40).slice(1, 40);
-var age_pour100k = false;
+var type_cumsum = false;
 
 var types_descriptions = {
     "hospitalisations": "Nombre de lits occupés à l'hôpital pour Covid19.",
@@ -105,6 +110,7 @@ var types_descriptions = {
     "nbre_acte_corona": "Nombre d'actes SOS médecin pour suspicion Covid19 (moyenne glissante 7 jours).",
     "nbre_pass_corona": "Nombre de passages aux urgences pour suspicion Covid19 (moyenne glissante 7 jours).",
     "n_cum_dose1": "Nombre de personnes ayant reçu au moins une dose de vaccin (J-1).",
+    "obepine": "Concentration du Sars-Cov-2 dans les eaux usées (réseau Obépine)."
 }
 
 var types_titres = {
@@ -121,6 +127,7 @@ var types_titres = {
     "nbre_acte_corona": "Actes SOS médecin pour Covid19",
     "nbre_pass_corona": "Passages aux urgences pour Covid19",
     "n_cum_dose1": "Personnes vaccinées",
+    "obepine": "Covid19 dans les eaux usées"
 }
 
 
@@ -131,13 +138,17 @@ let types_selected = ["incidence", "reanimations"]
 function boxTypeChecked(value){
     if (document.getElementById("types_"+value).checked) {
         types_selected.push(value);
-        console.log(types_selected)
     } else {
         types_selected = removeElementArray(types_selected, value);
         
     }
     buildChartTypes();
 
+}
+
+function type_cumSumChecked(){
+    type_cumsum = !type_cumsum;
+    buildChartTypes();
 }
 
 function types_changeColorage_seq(){
@@ -200,7 +211,7 @@ function secureChangeTime_types(){
     }
 
     sliderNoUi.noUiSlider.set([dmin, dmax])
-    changeTime();
+    changeTimeTypes();
 }
 
 function changeTimeTypes(){
@@ -212,37 +223,30 @@ function changeTimeTypes(){
     let idx_min = parseInt(idx[0])
     let idx_max = parseInt(idx[1])
 
-    var x_min_minimum = data["france"][data["france"]["incidence"]["jour_nom"]][idx_min];
-    
-    types_selected.map((value, idx) => {
-        x = data["france"][data["france"][value]["jour_nom"]][idx_min]
-        if (x<x_min_minimum){
-            x_min_minimum = x
-        }
-    })
+    var x_min_minimum = data["france"][data["france"]["reanimations"]["jour_nom"]][idx_min];
+    var x_max_maximum = data["france"][data["france"]["reanimations"]["jour_nom"]][idx_max];
     
     types_dataExplorerAgeChart.options.scales.xAxes[0].ticks = {
         min: x_min_minimum,
         max: data["france"][nom_jour][idx_max]
         }
     
-
     types_dataExplorerAgeChart.data.datasets.map((type_dataset, idx_type_dataset) => {
         var y_max = 0
         type_dataset.data.map((value, idx_type_data) => {
-            if(value.x > x_min_minimum){
-                if(value.y*1.1 > y_max){
-                    y_max = value.y*1.1
+            if(value.x >= x_min_minimum){
+                if(value.x <= x_max_maximum){
+                    if(value.y*1.1 > y_max){
+                        y_max = value.y*1.1
+                    }
                 }
             }
 
         })
-        console.log(type_dataset.label)
         if(type_dataset.label.includes("Cas")){
-            y_max = 55000;
+            y_max = 60000;
         }
-
-        types_dataExplorerAgeChart.options.scales.yAxes[idx_type_dataset].ticks.max = y_max
+        types_dataExplorerAgeChart.options.scales.yAxes[idx_type_dataset].ticks.max = Math.round(y_max)
         })
     
 
@@ -279,6 +283,33 @@ function updateSliderTypes(){
     //slider.max = N-1;  
 }
 
+function stopExec_types(){
+    clearTimeout(timeout_types)
+}
+
+var timeout_types;
+function animation_types(){
+    let slider = document.getElementById('sliderUITypes');
+    let max = slider.noUiSlider.options.range.max
+
+    var j = parseInt(slider.noUiSlider.get()[0])
+    slider.noUiSlider.set([j, j+1])
+    var i = parseInt(slider.noUiSlider.get()[1]); 
+
+    function myLoop() {         //  create a loop function
+        timeout_types = setTimeout(function() {   //  call a 3s setTimeout when the loop is called
+            idx = slider.noUiSlider.get();
+            slider.noUiSlider.set([parseInt(idx[0]), parseInt(idx[1])+1]);   //  your code here
+            i++;                    //  increment the counter
+            if (i < max) {           //  if the counter < 10, call the loop function
+                myLoop();             //  ..  again which will trigger another 
+            }                       //  ..  setTimeout()
+        }, 30)
+    }
+    myLoop()
+
+}
+
 function buildChartTypes(){
 
     updateSliderTypes();
@@ -309,6 +340,13 @@ function buildChartTypes(){
 
     document.getElementById("types_titre").innerHTML = territoire_temp + " " + complement;
 
+    if (type_cumsum){
+        document.getElementById("types_titre").innerHTML += " -  cumulé<sup>1</sup>";
+        document.getElementById("types_description").innerHTML += "<br><small><i><sup>1</sup> Le cumul des indicateurs comportant une moyenne mobile peut varier légèrement avec le cumul réel.</i></small>";
+    }
+
+    
+
     changeTimeTypes();
 }
 
@@ -332,9 +370,13 @@ function populateTerritoiresTypes(){
     console.log("exit_populate_territoires")
 }
 
-fetchtype_data()
+
+setTimeout(function () {
+    fetchtype_data()
+            }, 1500);
+
 function fetchtype_data(){
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/dataexplorer_compr.json', {cache: 'no-cache'})
+    fetch('https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/data/france/stats/dataexplorer_compr.json', {cache: 'no-cache'})
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -343,8 +385,6 @@ function fetchtype_data(){
         })
         .then(json => {
                 this.data = json;
-                console.log("HEYYYY")
-                console.log(data)
                 console.log("init-t")
                 //associationTranches();
                 console.log("association-t")
@@ -354,6 +394,7 @@ function fetchtype_data(){
                 populateTerritoiresTypes()
                 console.log("populate-territoires-t")
                 buildSliderTypes();
+                
                 console.log("done-t")
                 //telechargerImage()
                 
@@ -383,8 +424,22 @@ function addTraceTypes(value, territoire_temp){
     diviseur = 1;
     
     var jour_nom = data[territoire_temp][value]["jour_nom"]
-    data_temp = data[territoire_temp][value]["valeur"].map((val, idx) => ({x: data["france"][jour_nom][idx], y: val}))
+    var liste_jours = data["france"][jour_nom]
+
+    if(value=="obepine"){
+        liste_jours=data[territoire_temp][value]["jours"]
+    }
+
+    y = 0
+    array_data_types = data[territoire_temp][value]["valeur"]
+
+    if(type_cumsum){
+        array_data_types = array_data_types.map(d=>y+=d);
+    }
+
+    data_temp = array_data_types.map((val, idx) => ({x: liste_jours[idx], y: val}))
     
+
     var N = types_dataExplorerAgeChart.data.datasets.length
     if(N>=age_seq.length-1){
         N = 0
@@ -435,6 +490,16 @@ function addTraceTypes(value, territoire_temp){
 buildEmptyChartTypes();
 function buildEmptyChartTypes() {
     var ctx = document.getElementById('types_dataExplorerAgeChart').getContext('2d');
+    let vw=Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+
+    margin_right=120;
+    if(vw>1000){
+        margin_right=130;
+    } else if(vw>800){
+        margin_right=80;
+    } else {
+        margin_right=0;
+    }
 
     this.types_dataExplorerAgeChart = new Chart(ctx, {
         type: 'line',
@@ -445,7 +510,7 @@ function buildEmptyChartTypes() {
             layout: {
                 padding: {
                     left: 0,
-                    right: 100,
+                    right: margin_right,
                     top: 0,
                     bottom: 0
                 }
@@ -467,26 +532,26 @@ function buildEmptyChartTypes() {
                         }
                         
                         if(context.dataset.data[context.dataIndex].x == min_x){
-                            return  context.dataset.label;
+                            value = context.dataset.data[context.dataset.data.length-1].y
+                            value = (value*100).toFixed()/100
+                            return  value + " • " + context.dataset.label;
                         }
                         
-                        if (context.dataset.data[context.dataIndex].x == types_dataExplorerAgeChart.options.scales.xAxes[0].ticks.max)
-                        {
-                            console.log(context)
-                            console.log()
+                        //if (context.dataset.data[context.dataIndex].x == types_dataExplorerAgeChart.options.scales.xAxes[0].ticks.max)
+                        //{
                             //return  context.dataset.label;
                             //return  context.dataset.label;
-                        }
+                        //}
                         return "";
                     }
                 },
             },
             hover: {
-                mode: 'x',
+                mode: 'index',
                 intersect: false
             },
             tooltips: {
-                mode: 'x',
+                mode: 'index',
                 intersect: false
             },
             animation: {

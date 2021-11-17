@@ -17,8 +17,10 @@
         var donneesDepartementsVaccination;
         var typeCarteDepartement = 'n_dose1_cumsum_pop';
         var dateMaj = "";
-        var tableauValeurs = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5]
-        var tableauCouleurs= [
+
+        var tableauValeurs = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+
+        var tableauCouleurs = [
             "#cfdde6",
             "#b8d4e6",
             "#a1cbe6",
@@ -29,18 +31,10 @@
             "#2e9fe6",
             "#1796e6",
             "#0076bf"
-        ]; // HSV(203, xx, 90) avec xx de 10 à 100
+        ];
 
-        var tableauValeurs = [8, 10, 12, 14, 16]
-        var tableauCouleurs= [  
-            "#d5dee3",
-            "#b8d4e6",
-            "#5cb1e6",
-            "#1490de",
-            "#005387"
-        ]; // HSV(203, xx, 90) avec xx de 10 à 100
-
-        fetch('https://raw.githubusercontent.com/rozierguillaume/vaccintracker/main/data/output/vacsi-dep.json')
+        fetch('https://raw.githubusercontent.com/CovidTrackerFr/data-utils/main/vaccination-ameli/data/output/donnees-vaccination-par-tranche-dage-type-de-vaccin-et-departement.json')
+        //https://raw.githubusercontent.com/rozierguillaume/vaccintracker/main/data/output/vacsi-dep.json
             .then(response => {
                 if (!response.ok) {
                     throw new Error("HTTP error " + response.status);
@@ -52,45 +46,106 @@
                 colorerCarte()
             });
 
+        function computeMean() {
+            let total = 0;
+            let count = 0;
+            for (numeroDepartement in donneesDepartementsVaccination) {
+                if (numeroDepartement == 'departements') {
+                    continue;
+                }
+                total += donneesDepartementsVaccination[numeroDepartement]["taux_cumu_1_inj"];
+                count++;
+            }
+            return total/count;
+        }
+
+        //from Picomath
+        function erf(x) {
+            // constants
+            var a1 =  0.254829592;
+            var a2 = -0.284496736;
+            var a3 =  1.421413741;
+            var a4 = -1.453152027;
+            var a5 =  1.061405429;
+            var p  =  0.3275911;
+
+            // Save the sign of x
+            var sign = 1;
+            if (x < 0) {
+                sign = -1;
+            }
+            x = Math.abs(x);
+
+            // A&S formula 7.1.26
+            var t = 1.0/(1.0 + p*x);
+            var y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-x*x);
+
+            return sign*y;
+        }
+
+        function computeDeciles() {
+            let percentages = [];
+            for (numeroDepartement in donneesDepartementsVaccination) {
+                if (numeroDepartement == 'departements') {
+                    continue;
+                }
+                percentages.push(donneesDepartementsVaccination[numeroDepartement]["taux_cumu_1_inj"]);
+            }
+            percentages = percentages.sort();
+
+            let tableauValeurs = []
+            tableauValeurs.push(Math.floor(percentages[0]));
+            for(let i = 1; i <= 9; i++){
+                let y = percentages[Math.round(percentages.length / 10.0 * i)];
+                let nbDec = 0;
+                while(floorDec(y, nbDec) < tableauValeurs[0] || nbDec > 2) {
+                    nbDec += 1;
+                }
+                tableauValeurs.push(floorDec(y, nbDec));
+            }
+            return tableauValeurs;
+        };
+
+        function floorDec(val, n) {
+            let tenPowN = Math.pow(10, n);
+            return Math.floor(val * tenPowN) / tenPowN;
+        };
+
+        function computeGaussScale() {
+            let tableauValeurs = []
+            tableauValeurs.push(0);
+            let median = computeMedian();
+            for(let i = 1; i <= 8; i++){
+                let y = 0.5 + 0.5 * erf((i/13-median/130)/Math.sqrt(2));
+                tableauValeurs.push(Math.floor(y *100));
+            }
+            tableauValeurs.push(90);
+            return tableauValeurs;
+        };
+
         function colorerCarte() {
             pourcentage = false;
             plus = "+";
             vaccination = false;
 
            if (typeCarteDepartement == 'n_dose1_cumsum_pop') {
-                nomDonnee = "n_dose1_cumsum_pop";
+                nomDonnee = "taux_cumu_1_inj";
                 pourcentage = true;
                 plus = "";
             } else {
                 $('#carte path').css("fill", "#c4c4cb");
                 return;
             }
-            min_tab=100;
-            max_tab=0;
-            console.log("lol")
 
-            for (dep in donneesDepartementsVaccination){
-                value=donneesDepartementsVaccination[dep].n_dose1_cumsum_pop
-                if(max_tab<value){
-                    max_tab=value
-                }
-                if(min_tab>value){
-                    min_tab=value
-                }
-            }
-            tableauValeurs=[]
-            for(var i=0; i<5; i++){
-                tableauValeurs.push((min_tab + (max_tab-min_tab)*i/5).toFixed(1))
-            }
+           tableauValeurs = computeDeciles();
 
-            construireLegende(tableauValeurs, tableauCouleurs);
+            construireLegende(tableauValeurs, tableauCouleurs, true);
 
             for (numeroDepartement in donneesDepartementsVaccination) {
                 if (numeroDepartement == 'departements'){
                     continue;
                 }
                 donneesDepartement = donneesDepartementsVaccination[numeroDepartement];
-                // console.log(donneesDepartement);
                 var departementCarte = $('#carte path[data-num="' + numeroDepartement + '"]');
                 //Affectation de la valeur de la donnée du département à sa représentation sur la carte. .
                 departementCarte.data(nomDonnee, donneesDepartement[nomDonnee]);
@@ -102,15 +157,33 @@
         function construireLegende(values = [], colors = [], pourcentage = false) {
             content = $('#legendTemplatePre').html();
             values.map((val, idx) => {
-                if (pourcentage && (val != '>')) {
-                    if (val > 0) {
-                        content += $('#legendTemplateMid').html().replaceAll("valeur", plus + val + ' %').replaceAll("colorBg", colors[idx]);
+                if (pourcentage) {
+                    if (val == ">") {
+                        caseLegende = $('#legendTemplateMid').html()
+                            .replaceAll("valeur", '> ' + plus + values[idx+1] + ' %')
+                            .replaceAll("colorBg", colors[idx])
+                            .replaceAll('idxval', idx);
+                    } else if (val > 0) {
+                        caseLegende = $('#legendTemplateMid').html()
+                            .replaceAll("valeur", '> ' + plus + val + ' %')
+                            .replaceAll("colorBg", colors[idx])
+                            .replaceAll('idxval', idx);
                     } else {
-                        content += $('#legendTemplateMid').html().replaceAll("valeur", val + ' %').replaceAll("colorBg", colors[idx]);
+                        caseLegende = $('#legendTemplateMid').html()
+                            .replaceAll("valeur", val + ' %')
+                            .replaceAll("colorBg", colors[idx])
+                            .replaceAll('idxval', idx);
                     }
                 } else {
-                    content += $('#legendTemplateMid').html().replaceAll("valeur", val).replaceAll("colorBg", colors[idx]);
+                    caseLegende = $('#legendTemplateMid').html()
+                        .replaceAll("valeur", '< ' + val)
+                        .replaceAll("colorBg", colors[idx])
+                        .replaceAll('idxval', idx);
                 }
+                if (colors[idx]=='#cfdde6'){
+                    caseLegende = caseLegende.replaceAll("white", "#304b61");
+                }
+                content += caseLegende;
             });
             content += $('#legendTemplatePost').html();
             $('#legendeCarte').html(content);
@@ -133,11 +206,10 @@
 
             $('.departement-detail').remove();
             donneesVaccinationDepartement = donneesDepartementsVaccination[numeroDepartement];
-            console.log(donneesVaccinationDepartement);
-            donneesJournalieresDepartement = donneesVaccinationDepartement['n_dose1_cumsum'];
+            donneesJournalieresDepartement = donneesVaccinationDepartement['taux_cumu_1_inj_temps'];
             datesJours = donneesVaccinationDepartement['dates'];
             vaccinesDepartement = donneesJournalieresDepartement[donneesJournalieresDepartement.length-1];
-            vaccinesDepartementPop = donneesVaccinationDepartement['n_dose1_cumsum_pop'];
+            vaccinesDepartementPop = donneesVaccinationDepartement['taux_cumu_1_inj'];
             vaccinesDepartement = numberWithSpaces(vaccinesDepartement);
 
             dateMaj = datesJours[datesJours.length-1]
@@ -156,7 +228,6 @@
             content = content.replace(/nomDepartement/g, nomDepartement);
             content = content.replace(/numeroDepartement/g, numeroDepartement);
             content = content.replace(/vaccinesDepartement/g, vaccinesDepartement);
-            content = content.replace(/vaccinesPopReg/g, vaccinesDepartementPop);
 
             content = content.replace(/dateMajDoses/g, parseInt(fullDate.getDate()).addZero() + '/' + (fullDate.getMonth() + 1).addZero());
 
@@ -245,7 +316,7 @@
             departement = $(this).data("num");
             nomDepartement = $("#listeDepartements option[data-num='" + departement + "']").val();
             if (typeCarteDepartement == 'n_dose1_cumsum_pop') {
-                $('#carte #map title').text(nomDepartement + ' (' + $(this).data("n_dose1_cumsum_pop").toFixed(2) + ')');
+                $('#carte #map title').text(nomDepartement + ' (' + $(this).data("taux_cumu_1_inj").toFixed(2) + ')');
             } else {
                 $('#carte #map title').text(nomDepartement);
             }
@@ -265,6 +336,29 @@
             }
         });
 
+        //surlignage des dep au survol de la légende
+        $("#legendeCarte").on({
+            mouseenter: function(e){
+                let idx= parseInt($(this).data('idx'));
+                let value = tableauValeurs[idx];
+                let borneinf, bornesup;
+                if (idx == tableauValeurs.length -1) {
+                    bornesup = Infinity;
+                    borneinf = tableauValeurs[idx];
+                } else {
+                    borneinf = value;
+                    bornesup = tableauValeurs[idx+1];
+                }
+                $('#carte').find('svg path').filter(function(){
+                    let val = $(this).data('taux_cumu_1_inj');
+                    return val >= borneinf && val <= bornesup;
+                }).css({"stroke-width": '2.6', 'stroke': 'yellow'});
+            },
+            mouseleave: function(e){
+                $('#carte').find('svg path').css({'stroke-width': '', 'stroke': ''});
+            }
+        }, '.legendValue');
+
     });
 </script>
 
@@ -276,7 +370,11 @@
 
 <script id="legendTemplateMid" type="text/template">
     <tr>
-        <td style="text-align: center; background-color: colorBg; color: white; font-size: 50%; padding: 5px;">valeur
+        <td class="legendValue"
+            style="text-align: center; background-color: colorBg; color: white; font-size: 50%; padding: 5px;"
+            data-idx="idxval"
+        >
+            valeur
         </td>
     </tr>
 </script>

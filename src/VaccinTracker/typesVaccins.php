@@ -46,7 +46,7 @@ function fetchTypesVaccins(){
             })
             .then(json => {
                 this.typesVaccins = json;
-                console.log(typesVaccins)
+                //console.log(typesVaccins)
                 buildChartTypesVaccins();
                 buildLineTypeChart_tous();
                 nextFetch();
@@ -81,19 +81,20 @@ function nextFetch(){
 
 
 var barChartTypesVaccins;
-var colors=["#1796e6", "#ef9a9a", "#B39DDB"]
+var colors=["#1796e6", "#ef9a9a", "#B39DDB", "#21d421"]
 
 function buildChartTypesVaccins(){
         var ctx = document.getElementById('barChartTypesVaccins').getContext('2d');
         N1 = typesVaccins["1"]["jour"].length-1
         N2 = typesVaccins["2"]["jour"].length-1
         N3 = typesVaccins["3"]["jour"].length-1
+        N4 = typesVaccins["4"]["jour"].length-1
 
         this.barChartTypesVaccins = new Chart(ctx, {
 
             type: 'bar',
             data: {
-                labels: ["Vaccinations cumulées (1ères doses)"],
+                labels: ["Vaccinations cumulées"],
                 datasets: [
                     {
                     label: typesVaccins.noms_vaccins[1-1],
@@ -116,6 +117,14 @@ function buildChartTypesVaccins(){
                     data: [{y: typesVaccins["3"]["n_cum_dose1"][N3] + typesVaccins["3"]["n_cum_dose2"][N3], x:"Vaccinations cumulées"}],
                     borderWidth: 3,
                     backgroundColor: colors[2],
+                    borderWidth: 0,
+                    cubicInterpolationMode: 'monotone',
+                },
+                {
+                    label: typesVaccins.noms_vaccins[4-1],
+                    data: [{y: typesVaccins["4"]["n_cum_dose1"][N4] + typesVaccins["4"]["n_cum_dose2"][N4], x:"Vaccinations cumulées"}],
+                    borderWidth: 3,
+                    backgroundColor: colors[3],
                     borderWidth: 0,
                     cubicInterpolationMode: 'monotone',
                 },
@@ -175,7 +184,7 @@ function buildChartTypesVaccins(){
 
     function buildLineTypeChart(typeVaccin){
         typeVaccin = typeVaccin.toString()
-        console.log(typesVaccinsLivraisons)
+        //console.log(typesVaccinsLivraisons)
         N_livraisons = typesVaccinsLivraisons[typeVaccin].nb_doses_tot_cumsum.length
         max_value = typesVaccinsLivraisons[typeVaccin].nb_doses_tot_cumsum[N_livraisons-1]
 
@@ -195,7 +204,7 @@ function buildChartTypesVaccins(){
                         backgroundColor: "lightblue",
                         borderColor: "lightblue",
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 1,
                     },
                     {
                         yAxisID:"injections",
@@ -205,16 +214,16 @@ function buildChartTypesVaccins(){
                         backgroundColor: "#1796e6",
                         borderColor: "#1796e6",
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 1,
                     },
                     {
                         yAxisID:"injections_stock",
-                        label: 'Livraisons (passées et planifiées) ',
-                        data: typesVaccinsLivraisons[typeVaccin].jour.map((day, idx) => ({x: moment(day).add(-3, 'd'), y: typesVaccinsLivraisons[typeVaccin].nb_doses_tot_cumsum[idx]})),
+                        label: 'Livraisons (passées et planifiées !) ',
+                        data: typesVaccinsLivraisons[typeVaccin].jour.map((day, idx) => ({x: moment(day).add(-4, 'd').format("YYYY-MM-DD"), y: typesVaccinsLivraisons[typeVaccin].nb_doses_tot_cumsum[idx]})),
                         borderWidth: 3,
                         borderColor: "grey",
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 1,
                         steppedLine: true,
                     }
                     
@@ -224,12 +233,18 @@ function buildChartTypesVaccins(){
                 aspectRatio: 0.7,
                 maintainAspectRatio: true,
                 tooltips: {
+                    mode: 'x',
+                    intersect: false,
                     callbacks: {
                         label: function(tooltipItem, data) {
                             let value = data['datasets'][tooltipItem.datasetIndex]['data'][tooltipItem['index']].y.toString().split(/(?=(?:...)*$)/).join(' ');
                             return data['datasets'][tooltipItem.datasetIndex]['label'] + ': ' + value.toString();
                         }
                     }
+                },
+                hover: {
+                    intersect: false,
+                    mode: 'x'
                 },
                 maintainAspectRatio: false,
                 plugins: {
@@ -303,36 +318,47 @@ function buildChartTypesVaccins(){
                 datasets: [
                     {
                         yAxisID:"livraisons",
-                        label: typesVaccins.noms_vaccins[1-1] + " ",
+                        label: typesVaccinsLivraisons.noms_vaccins[1-1] + " ",
                         data: typesVaccinsLivraisons[1].jour.map((day, idx) => ({x: day, y: typesVaccinsLivraisons[1].nb_doses_tot_cumsum[idx]})),
                         borderWidth: 4,
                         fill: true,
                         backgroundColor: colors[1-1],
                         borderColor: colors[1-1],
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 5,
                     },
                     {
                         yAxisID:"livraisons",
-                        label: typesVaccins.noms_vaccins[2-1] + " ",
+                        label: typesVaccinsLivraisons.noms_vaccins[2-1] + " ",
                         data: typesVaccinsLivraisons[2].jour.map((day, idx) => ({x: day, y: typesVaccinsLivraisons[2].nb_doses_tot_cumsum[idx]})),
                         borderWidth: 4,
                         fill: true,
                         backgroundColor: colors[2-1],
                         borderColor: colors[2-1],
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 5,
                     },
                     {
                         yAxisID:"livraisons",
-                        label: typesVaccins.noms_vaccins[3-1] + " ",
+                        label: typesVaccinsLivraisons.noms_vaccins[3-1] + " ",
                         data: typesVaccinsLivraisons[3].jour.map((day, idx) => ({x: day, y: typesVaccinsLivraisons[3].nb_doses_tot_cumsum[idx]})),
                         borderWidth: 4,
                         fill: true,
                         backgroundColor: colors[3-1],
                         borderColor: colors[3-1],
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 5,
+                    },
+                    {
+                        yAxisID:"livraisons",
+                        label: typesVaccinsLivraisons.noms_vaccins[4-1] + " ",
+                        data: typesVaccinsLivraisons[4].jour.map((day, idx) => ({x: day, y: typesVaccinsLivraisons[4].nb_doses_tot_cumsum[idx]})),
+                        borderWidth: 4,
+                        fill: true,
+                        backgroundColor: colors[4-1],
+                        borderColor: colors[4-1],
+                        pointRadius: 0,
+                        pointHitRadius: 5,
                     },
                 ]
             },
@@ -340,12 +366,18 @@ function buildChartTypesVaccins(){
                 aspectRatio: 0.7,
                 maintainAspectRatio: true,
                 tooltips: {
+                    mode: 'x',
+                    intersect: false,
                     callbacks: {
                         label: function(tooltipItem, data) {
                             let value = data['datasets'][tooltipItem.datasetIndex]['data'][tooltipItem['index']].y.toString().split(/(?=(?:...)*$)/).join(' ');
                             return data['datasets'][tooltipItem.datasetIndex]['label'] + ': ' + value.toString();
                         }
                     }
+                },
+                hover: {
+                    intersect: false,
+                    mode: 'x'
                 },
                 maintainAspectRatio: false,
                 plugins: {
@@ -425,7 +457,7 @@ function buildChartTypesVaccins(){
                         backgroundColor: colors[1-1],
                         borderColor: colors[1-1],
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 1,
                     },
                     {
                         yAxisID:"injections",
@@ -436,7 +468,7 @@ function buildChartTypesVaccins(){
                         backgroundColor: colors[2-1],
                         borderColor: colors[2-1],
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 1,
                     },
                     {
                         yAxisID:"injections",
@@ -447,7 +479,18 @@ function buildChartTypesVaccins(){
                         backgroundColor: colors[3-1],
                         borderColor: colors[3-1],
                         pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointHitRadius: 1,
+                    },
+                    {
+                        yAxisID:"injections",
+                        label: typesVaccins.noms_vaccins[4-1] + " ",
+                        data: typesVaccins["4"].jour.map((day, idx) => ({x: day, y: typesVaccins["4"].n_cum_dose1[idx]+typesVaccins["4"].n_cum_dose2[idx]})),
+                        borderWidth: 4,
+                        fill: false,
+                        backgroundColor: colors[4-1],
+                        borderColor: colors[4-1],
+                        pointRadius: 0,
+                        pointHitRadius: 1,
                     },
                 ]
             },
@@ -455,12 +498,18 @@ function buildChartTypesVaccins(){
                 aspectRatio: 0.7,
                 maintainAspectRatio: true,
                 tooltips: {
+                    mode: 'x',
+                    intersect: false,
                     callbacks: {
                         label: function(tooltipItem, data) {
                             let value = data['datasets'][tooltipItem.datasetIndex]['data'][tooltipItem['index']].y.toString().split(/(?=(?:...)*$)/).join(' ');
                             return data['datasets'][tooltipItem.datasetIndex]['label'] + ': ' + value.toString();
                         }
                     }
+                },
+                hover: {
+                    intersect: false,
+                    mode: 'x'
                 },
                 maintainAspectRatio: false,
                 plugins: {

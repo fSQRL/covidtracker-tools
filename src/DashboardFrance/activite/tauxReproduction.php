@@ -18,21 +18,21 @@
     </li>
     <li class="nav-item">
         <a class="nav-link" id="profile-tab" data-toggle="tab" href="#TRRegions" role="tab" aria-controls="profile" aria-selected="false">
-            Animation (rouge/vert)
+            Régions
         </a>
     </li>
 </ul>
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane active in" id="TRFrance" role="tabpanel" aria-labelledby="TRFrance-tab">
         <p align="center">
-            <a href="https://raw.githubusercontent.com/rozierguillaume/covid-19/master/images/charts/france/reffectif.jpeg" target="_blank" rel="noopener noreferrer"><img src="https://raw.githubusercontent.com/rozierguillaume/covid-19/master/images/charts/france/reffectif.jpeg" width="100%" style="max-width: 1000px">
+            <a href="https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/images/charts/france/reffectif.jpeg" target="_blank" rel="noopener noreferrer"><img src="https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/images/charts/france/reffectif.jpeg" width="100%" style="max-width: 1000px">
             </a>
         </p>
     </div>
     <div class="tab-pane fade" id="TRRegions" role="tabpanel" aria-labelledby="TRRegions-tab">
         <p align="center">
 
-            <a href="https://raw.githubusercontent.com/rozierguillaume/covid-19/master/images/charts/france/subplots_reffectif.jpeg" target="_blank" rel="noopener noreferrer"><img src="https://raw.githubusercontent.com/rozierguillaume/covid-19/master/images/charts/france/subplots_reffectif.jpeg" width="100%" style="max-width: 1000px"></a>
+            <a href="https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/images/charts/france/subplots_reffectif.jpeg" target="_blank" rel="noopener noreferrer"><img src="https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/images/charts/france/subplots_reffectif.jpeg" width="100%" style="max-width: 1000px"></a>
         </p>
     </div>
 

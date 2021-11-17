@@ -58,10 +58,10 @@ Mise à jour : <span id="date_update_coup_doeil2">-/-</span>
                     </div>
                 </div>
                 <p><span id="cas_p1"></span> <b>
-                        <span id="cas_moyen_quotidien">--</span> tests</b>
+                        <span id="cas_moyen_quotidien" style="font-size: 20px;">--</span> cas</b>
                     positifs au Covid19 <span id="cas_p2"></span>chaque jour,
-                    <span id="croissance_cas">--</span>
-                    par rapport à la semaine dernière <span id="type_jour"></span>.
+                    <span id="croissance_cas" class="taux_croissance_stable">--</span>
+                    par rapport à la semaine dernière <span id="type_jour"></span>. <a href="https://covidtracker.fr/dashboard-depistage">Dépistage et cas ▸</a>
                 </p>
 
                 <div>
@@ -81,6 +81,47 @@ Mise à jour : <span id="date_update_coup_doeil2">-/-</span>
             <div style="text-align: left; margin-top:5px;" shadow="">
                 <div class="row flex-nowrap">
                     <div class="col-xs-7" style="">
+                        <centering><h3 id='titreAdmissionsHospitDiv'>--</h3></centering>
+                    </div>
+
+                    <div class="col-xs-5" style="text-align: right;">
+                        <div id="choixDonneesAdmissionsHospit" class="btn-group" role="group" style="margin-top: 5px;">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary dropdown-toggle selected" data-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">Plus
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li data-carte="adm-reanimations" onclick="dataSelectedAdmHosp('adm_rea')">
+                                        <a id="adm_rea_ligne" class="selected">Adm. soins critiques</a>
+                                    </li>
+                                    <li data-carte="adm-hospitalisations" onclick="dataSelectedAdmHosp('adm_hosp')">
+                                        <a id="adm_hosp_ligne" class="">Adm. hôpital</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>Il y a en moyenne <b><span id="adm-hospit-value" style="font-size: 20px;">--</span>
+                         <span id="typePersonnesAdm">admissions en soins critiques</span></b> pour Covid19 chaque jour,
+                    <span id="croissance-adm-hospit" class="taux_croissance_stable">--</span> par rapport à la semaine dernière.<br><a href="https://covidtracker.fr/dashboard-reanimations">Soins critiques ▸</a> &nbsp; <a href="https://covidtracker.fr/dashboard-hospitalisations">Hospitalisations ▸</a><br>
+                </p>
+                <div>
+                    <canvas id="admHospitChart" style="margin-top:20px; max-height: 700px; max-width: 900px;"></canvas>
+                </div>
+                <br><br><br>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom:10px;">
+    <div class="col-md-6">
+            <div style="text-align: left; margin-top:5px;" shadow="">
+                <div class="row flex-nowrap">
+                    <div class="col-xs-7" style="">
                         <centering><h3 id='titreHospitDiv'>--</h3></centering>
                     </div>
 
@@ -93,25 +134,46 @@ Mise à jour : <span id="date_update_coup_doeil2">-/-</span>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-right">
                                     <li data-carte="reanimations" onclick="dataSelected('rea')">
-                                        <a id="rea-ligne" class="selected">Réanimations</a>
+                                        <a id="rea-ligne" class="selected">Soins critiques</a>
                                     </li>
                                     <li data-carte="hospitalisations" onclick="dataSelected('hosp')">
                                         <a id="hosp-ligne" class="">Hospitalisations</a>
                                     </li>
-                                    <li data-carte="dc-hospitaliers" onclick="dataSelected('dc')">
-                                        <a id="dc-ligne" class="">Décès hospitaliers</a></li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <p>Il y a actuellement <b><span id="reanimations">--</span>
-                        personnes <span id="typePersonnes">en réanimation</span></b> pour Covid19,
-                    <span id="croissance_rea">--</span> par rapport à la semaine dernière.<br><br>
+                <p>Il y a actuellement <b><span id="reanimations" style="font-size: 20px;">--</span>
+                        personnes <span id="typePersonnes">en soins critiques</span></b> pour Covid19,
+                    <span id="croissance_rea" class="taux_croissance_stable">--</span> par rapport à la semaine dernière.<br><a href="https://covidtracker.fr/dashboard-reanimations">Soins critiques ▸</a> &nbsp; <a href="https://covidtracker.fr/dashboard-hospitalisations">Hospitalisations ▸</a><br>
                 </p>
                 <div>
                     <canvas id="barChart" style="margin-top:20px; max-height: 700px; max-width: 900px;"></canvas>
+                </div>
+                <br><br><br>
+            </div>
+            
+        </div>
+        <div class="col-md-6">
+            <div style="text-align: left; margin-top:5px;" shadow="">
+                <div class="row flex-nowrap">
+                    <div class="col-xs-7" style="">
+                        <centering><h3 id='titreDcDiv'>Décès hospitaliers</h3></centering>
+                    </div>
+
+                    <div class="col-xs-5" style="text-align: right;">
+                        
+                    </div>
+                </div>
+
+                <p>Il y a en moyenne <b><span id="dc_value" style="font-size: 20px;">--</span>
+                        décès hospitaliers</b> pour Covid19 chaque jour,
+                    <span id="croissance_dc" class="taux_croissance_stable">--</span> par rapport à la semaine dernière.<br><a href="https://covidtracker.fr/dashboard-deces">Décès hospitaliers ▸</a>
+                </p>
+                <div>
+                    <canvas id="barChartDc" style="margin-top:20px; max-height: 700px; max-width: 900px;"></canvas>
                 </div>
                 <br><br><br>
             </div>

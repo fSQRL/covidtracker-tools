@@ -16,18 +16,20 @@
                     <optgroup label="Indicateurs épidémiques">
                         <option value="incidence">Taux d'incidence</option>
                         <option value="cas">Cas positifs</option>
+                        <option value="cas_croissance_hebdo">Croissance cas pos.</option>
                         <option value="tests">Dépistage</option>
                         <option value="taux_positivite">Taux de positivite</option>
                     </optgroup>
                     <optgroup label="Indicateurs sanitaires">
                         <option value="hospitalisations">Hospitalisations</option>
+                        <option value="adm_hospitalisations">Adm. à l'hôpital</option>
                         <option value="reanimations">Réanimations</option>
                         <option value="deces_hospitaliers">Décès hospitaliers</option>
                     </optgroup>
                 </select>
                 <br>
-                <input type='checkbox' id='age_pour100kAge' onchange="age_pour100kAgeChecked()" style="margin-bottom:10px;"> Pour 100 k habitants
-                
+                <input type='checkbox' id='age_pour100kAge' onchange="age_pour100kAgeChecked()" style="margin-bottom:10px;"> Pour 100 k habitants<br>
+                <input type='checkbox' id='age_cumsum' onchange="age_cumSumChecked()" style="margin-bottom:10px;"> Somme cumulée
                 </div>
             <br>
 
@@ -47,6 +49,10 @@
             <div id="checkboxes" style="text-align: left; height:300px; overflow-y:scroll; padding: 5px; border-radius: 7px; box-shadow: inset 0px 0px 10px 5px rgba(0, 0, 0, 0.07)">
                     <span id="agesCheckboxes"></span>
             </div>
+            <br>
+            Animation<br>
+            <a id="myLink" onclick="animation_age();"><i class="material-icons" style="cursor: pointer;">play_arrow</i></a>
+            <a id="stop" onclick="stopExec_age();"><i class="material-icons" style="cursor: pointer;">stop</i></a>
         </div>
         
         <div class="col-sm-9" style="min-width: 300px;">
@@ -101,10 +107,12 @@ var age_selected_tranches=["tous"];
 var age_data;
 var age_seq = palette('mpn65', 40).slice(1, 40);
 var age_pour100k = false;
+var age_cumsum = false;
 var associationTranchesNoms = {}
 
 var age_descriptions = {
     "hospitalisations": "Nombre de lits occupés à l'hôpital pour Covid19.",
+    "adm_hospitalisations": "Nombre nouvelles admissions à l'hôpital pour Covid19 (par date d'admission, moyenne sur chaque semaine calendaire, màj les jeudis).",
     "incid_hospitalisations": "Nombre d'admissions quotidiennes à l'hôpital pour Covid19 (moyenne glissante 7 jours).",
     "incidence": "Nombre de cas par semaine pour 100 000 habitants.",
     "taux_positivite": "Proportion des tests qui sont positifs (en %).",
@@ -112,6 +120,7 @@ var age_descriptions = {
     "incid_reanimations": "Nombre d'admissions quotidiennes en réanimation pour Covid19 (moyenne glissante 7 jours).",
     "deces_hospitaliers": "Nombre de décès quotidiens pour Covid19 à l'hôpital (moyenne glissante 7 jours).",
     "cas": "Nombre de tests positifs quotidiens (RT-PCR et antigéniques) (moyenne glissante 7 jours).",
+    "cas_croissance_hebdo": "Croissance du nombre de cas positifs (moyenne mobile de 7 j.) sur une semaine (en %). Les taux de croissance sont plafonnés à -200% et +200% (afin de corriger les jours fériés).",
     "tests": "Nombre de tests quotidiens (positifs et négatifs) (moyenne glissante 7 jours).",
     "nbre_acte_corona": "Nombre d'actes SOS médecin pour suspicion Covid19 (moyenne glissante 7 jours).",
     "nbre_pass_corona": "Nombre de passages aux urgences pour suspicion Covid19 (moyenne glissante 7 jours).",
@@ -119,6 +128,7 @@ var age_descriptions = {
 
 var age_titres = {
     "hospitalisations": "Hospitalisations",
+    "adm_hospitalisations": "Nouvelles adm. à l'hôpital",
     "incid_hospitalisations": "Nouvelles admissions à l'hôpital",
     "incidence": "Taux d'incidence",
     "taux_positivite": "Taux de positivité",
@@ -126,6 +136,7 @@ var age_titres = {
     "incid_reanimations": "Nouvelles admissions en réanimation",
     "deces_hospitaliers": "Décès hospitaliers",
     "cas": "Cas positifs",
+    "cas_croissance_hebdo": "Croissance sur 7 jours des cas positifs",
     "tests": "Dépistage",
     "nbre_acte_corona": "Actes SOS médecin pour Covid19",
     "nbre_pass_corona": "Passages aux urgences pour Covid19",
@@ -160,6 +171,11 @@ function boxAgeChecked(value){
 
 function age_pour100kAgeChecked(){
     age_pour100k = !age_pour100k;
+    buildChartAge();
+}
+
+function age_cumSumChecked(){
+    age_cumsum = !age_cumsum;
     buildChartAge();
 }
 
@@ -223,7 +239,7 @@ function secureChangeTime_age(){
     }
 
     sliderNoUi.noUiSlider.set([dmin, dmax])
-    changeTime();
+    changeTimeAge();
 }
 
 function changeTimeAge(){
@@ -237,6 +253,7 @@ function changeTimeAge(){
     let idx_max = parseInt(idx[1])
 
     let x_min = age_data["france"][nom_jour][idx_min]
+    let x_max = age_data["france"][nom_jour][idx_max]
     
     age_dataExplorerAgeChart.options.scales.xAxes[0].ticks = {
         min: x_min,
@@ -247,23 +264,56 @@ function changeTimeAge(){
     age_dataExplorerAgeChart.data.datasets.map((age_dataset, idx_age_dataset) => {
         
         age_dataset.data.map((value, idx_age_data) => {
-            if(value.x > x_min){
-                if(value.y*1.1 > y_max){
-                    y_max = value.y*1.1
+            if(value.x >= x_min){
+                if(value.x <= x_max){
+                    if(value.y*1.1 > y_max){
+                        y_max = value.y*1.1
+                    }
                 }
             }
 
         })
     })
     
+    //if(age_selected_age_data=="cas_croissance_hebdo"){
+       // y_max=200
+    //}
+
     age_dataExplorerAgeChart.options.scales.yAxes.map((axis, idx) => {
         axis.ticks = {
-        min: 0,
-        max: y_max
+        //min: 0,
+        max: Math.round(y_max)
         }
     })
     
     age_dataExplorerAgeChart.update()
+
+}
+
+function stopExec_age(){
+    clearTimeout(timeout_age)
+}
+
+var timeout_age;
+function animation_age(){
+    let slider = document.getElementById('sliderUIAge');
+    let max = slider.noUiSlider.options.range.max
+
+    var j = parseInt(slider.noUiSlider.get()[0])
+    slider.noUiSlider.set([j, j+1])
+    var i = parseInt(slider.noUiSlider.get()[1]); 
+
+    function myLoop() {         //  create a loop function
+        timeout_age = setTimeout(function() {   //  call a 3s setTimeout when the loop is called
+            idx = slider.noUiSlider.get();
+            slider.noUiSlider.set([parseInt(idx[0]), parseInt(idx[1])+1]);   //  your code here
+            i++;                    //  increment the counter
+            if (i < max) {           //  if the counter < 10, call the loop function
+                myLoop();             //  ..  again which will trigger another 
+            }                       //  ..  setTimeout()
+        }, 30)
+    }
+    myLoop()
 
 }
 
@@ -329,6 +379,20 @@ function buildChartAge(){
     
     age_pour100k_temp = checkage_pour100kAge(age_selected_age_data[0]);
 
+    var param_age={'fill': true, 'borderWidth': 4};
+
+    if(age_selected_tranches.length>1){
+        param_age['fill'] = false
+        param_age['borderWidth'] = 3.5
+    }
+    if(age_selected_tranches.length>3){
+        param_age['fill'] = false
+        param_age['borderWidth'] = 3
+    }
+    if(age_selected_tranches.length>10){
+        param_age['borderWidth'] = 2
+    }
+
     if(document.querySelector('#territoireAge option:checked').parentElement.label == "Départements"){
         if(document.querySelector('#typeDoneesAge option:checked').parentElement.label == "Indicateurs sanitaires"){
             window.alert("Santé publique France ne publie pas les données hospitaliaires par tranche d'âge au niveau départemental. Merci de sélectionner un indicateur épidémique, ou de sélectionner un autre territoire (region, France entière).");
@@ -336,7 +400,7 @@ function buildChartAge(){
     }
     age_selected_territoires.map((territoire_temp, idx_temp) => {
         age_selected_tranches.map((value, idx) => {
-        addTraceAge(age_selected_age_data[0], value, age_pour100k_temp, document.getElementById("territoireAge").value);
+            addTraceAge(age_selected_age_data[0], value, age_pour100k_temp, document.getElementById("territoireAge").value, param_age);
     })
     })
 
@@ -348,13 +412,18 @@ function buildChartAge(){
     }
 
     document.getElementById("age_titre").innerHTML = age_titres[age_selected_age_data[0]] + " - " + territoire_temp;
+    document.getElementById("age_description").innerHTML = age_descriptions[age_selected_age_data[0]] + age_credits;
 
     if (age_pour100k){
         if(! incompatibles_age_pour100k.includes(age_selected_age_data[0])){
-            document.getElementById("age_titre").innerHTML += " pour 100k habitants";
+            document.getElementById("age_titre").innerHTML += " - pour 100k habitants";
         }
     }
-    document.getElementById("age_description").innerHTML = age_descriptions[age_selected_age_data[0]] + age_credits;
+    if (age_cumsum){
+        document.getElementById("age_titre").innerHTML += " -  cumulé<sup>1</sup>";
+        document.getElementById("age_description").innerHTML += "<br><small><i><sup>1</sup> Le cumul des indicateurs comportant une moyenne mobile peut varier légèrement avec le cumul réel.</i></small>";
+    }
+    
     changeTimeAge();
 }
 
@@ -381,19 +450,31 @@ function populateAgesSelect(){
     
 }
 
+function truncate(value, n=15){
+    if(value.length>n){
+        if(value.slice(n)==" "){
+            value.slice(0, n-1) + ".";
+        }
+        return value.slice(0, n) + ".";
+    }
+    return value;
+}
+
 function populateTerritoires(){
     console.log("enter_populate_territoires")
+    console.log(age_data.regions)
+    console.log(age_data.departements)
 
     html_code = "<optgroup label='Régions'>"
     age_data.regions.map((value, idx) => {
-        html_code += "<option value='" + replaceBadCharacters(value) + "'>" + value + "</option>"
+        html_code += "<option value='" + replaceBadCharacters(value) + "'>" + truncate(value) + "</option>"
     })
     html_code += "</optgroup>"
 
     html_code += "<optgroup label='Départements'>"
 
     age_data.departements.map((value, idx) => {
-        html_code += "<option value='" + replaceBadCharacters(value) + "'>" + value + " " + age_data.departements_noms[value] + "</option>"
+        html_code += "<option value='" + replaceBadCharacters(value) + "'>" + value + " " + truncate(age_data.departements_noms[value]) + "</option>"
     })
     html_code += "</optgroup>"
 
@@ -401,9 +482,12 @@ function populateTerritoires(){
     console.log("exit_populate_territoires")
 }
 
-fetchage_data();
+setTimeout(function () {
+    fetchage_data();
+        }, 500);
+
 function fetchage_data(){
-    fetch('https://raw.githubusercontent.com/rozierguillaume/covid-19/master/data/france/stats/dataexplorer_compr_age.json', {cache: 'no-cache'})
+    fetch('https://raw.githubusercontent.com/CovidTrackerFr/covidtracker-data/master/data/france/stats/dataexplorer_compr_age.json', {cache: 'no-cache'})
         .then(response => {
             if (!response.ok) {
                 throw new Error("HTTP error " + response.status);
@@ -421,8 +505,9 @@ function fetchage_data(){
                 populateTerritoires()
                 console.log("populate-territoires-a")
                 buildSliderAge();
+                
                 console.log("done-a")
-                telechargerImage()
+                //telechargerImage()
                 
             })
         .catch(function () {
@@ -435,7 +520,7 @@ function fetchage_data(){
 function associationTranches(){
     console.log("enter associationTranches")
     age_data.france.tranches_noms.map((value, idx) => {associationTranchesNoms[value]=age_data.france.tranches_noms_affichage[idx]})
-    console.log("enter associationTranches")
+    console.log("exit associationTranches")
 }
 
 function removeElementArray(arr, element){
@@ -452,7 +537,7 @@ function replaceBadCharacters(dep){
     return dep.replace("'", "&apos;").replace("ô", "&ocirc;")
   }
 
-function addTraceAge(value, tranche, age_pour100k_temp, territoire_temp){
+function addTraceAge(value, tranche, age_pour100k_temp, territoire_temp, param){
     diviseur = 1;
     if (age_pour100k_temp){
         diviseur = 1
@@ -460,7 +545,15 @@ function addTraceAge(value, tranche, age_pour100k_temp, territoire_temp){
     }
     
     var jour_nom = age_data[territoire_temp][tranche][value]["jour_nom"]
-    age_data_temp = age_data[territoire_temp][tranche][value]["valeur"].map((val, idx) => ({x: age_data["france"][jour_nom][idx], y: val/diviseur}))
+
+    y = 0
+    array_data_age = age_data[territoire_temp][tranche][value]["valeur"]
+
+    if(age_cumsum==true){
+        array_data_age = array_data_age.map(d=>y+=d);
+    }
+
+    age_data_temp = array_data_age.map((val, idx) => ({x: age_data["france"][jour_nom][idx], y: val/diviseur}))
     
     var N = age_dataExplorerAgeChart.data.datasets.length
     if(N>=age_seq.length-1){
@@ -473,13 +566,18 @@ function addTraceAge(value, tranche, age_pour100k_temp, territoire_temp){
         tranche=noms_tranches[tranche]
     }
     
+    hex_color="#"+age_seq[N];
+    color=hexToRgbA(hex_color).match(/\d+/g);
+
     age_dataExplorerAgeChart.data.datasets.push({
         yAxisID: value,
         label: associationTranchesNoms[tranche] + complement,
         data: age_data_temp,
         pointRadius: 0,
-        backgroundColor: 'rgba(0, 168, 235, 0)',
+        fill: param['fill'],
+        backgroundColor: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
         borderColor: "#"+age_seq[N],
+        borderWidth: param["borderWidth"],
         cubicInterpolationMode: 'monotone',
         pointHoverRadius: 5,
         pointHoverBackgroundColor: "#"+age_seq[N],
@@ -497,6 +595,16 @@ function addTraceAge(value, tranche, age_pour100k_temp, territoire_temp){
 buildEmptyChartAge();
 function buildEmptyChartAge() {
     var ctx = document.getElementById('age_dataExplorerAgeChart').getContext('2d');
+    let vw=Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+
+    margin_right=120;
+    if(vw>1000){
+        margin_right=120;
+    } else if(vw>800){
+        margin_right=80;
+    } else {
+        margin_right=0;
+    }
 
     this.age_dataExplorerAgeChart = new Chart(ctx, {
         type: 'line',
@@ -507,7 +615,7 @@ function buildEmptyChartAge() {
             layout: {
                 padding: {
                     left: 0,
-                    right: 100,
+                    right: margin_right,
                     top: 0,
                     bottom: 0
                 }
@@ -523,17 +631,20 @@ function buildEmptyChartAge() {
                     formatter: function(value, context) {
                         if (context.dataset.data[context.dataIndex].x == age_dataExplorerAgeChart.options.scales.xAxes[0].ticks.max)
                         {
-                            return  context.dataset.label;
+                            value = context.dataset.data[context.dataset.data.length-1].y
+                            value = (value*100).toFixed()/100
+                            return  value + " • " + context.dataset.label;
                         }
                         return "";
                     }
                 },
             },
             hover: {
+                mode: 'index',
                 intersect: false
             },
             tooltips: {
-                mode: 'x',
+                mode: 'index',
                 intersect: false
             },
             animation: {
@@ -550,9 +661,9 @@ function buildEmptyChartAge() {
                     gridLines: {
                         display: false
                     },
-                    ticks: {
-                        min: 0
-                    },
+                    //ticks: {
+                        //min: 0
+                    //},
 
                 }],
                 xAxes: [{

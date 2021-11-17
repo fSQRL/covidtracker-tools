@@ -1,7 +1,7 @@
 <?php include(dirname(__DIR__) . '/message_erreur.php') ?>
 
 <div id="menu" class="row">
-    <div class="col-md-4 col-md-push-7" style="padding-top: 20px;">
+    <div class="col-md-4 col-md-push-8" style="padding-top: 20px;">
         <p>
             Retrouvez les graphiques CovidTracker pour les départements de votre choix :
         <ul>
@@ -26,7 +26,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-8 text-center col-md-pull-5">
+    <div class="col-md-8 text-center col-md-pull-4">
         <div class="row">
             <div class="col-xs-12">
                 <div id="choixTypeCarte" class="btn-group" role="group">
@@ -42,11 +42,8 @@
                             <li data-carte="incidence-cas-12-couleurs">
                                 <a href="#" class="">Taux d'incidence (13 couleurs)</a>
                             </li>
-                            <li data-carte="var_uk">
-                                <a href="#" class="">Variant UK</a>
-                            </li>
-                            <li data-carte="var_sa_bz">
-                                <a href="#" class="">Variants SA et BZ</a>
+                            <li data-carte="var_c1">
+                                <a href="#" class="">Variant Delta</a>
                             </li>
                             <li data-carte="evolution-cas"><a href="#">Évolution du taux d'incidence</a></li>
                             <li data-carte="taux-positivite-restreint"><a href="#">Taux de positivité</a></li>
@@ -60,6 +57,7 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li data-carte="n_dose1_cumsum_pop"><a href="#">Proportion partiellement vaccinés</a></li>
+                            <li data-carte="n_dose1_comparaison"><a href="#">Comparaison moyenne nationale</a></li>
                         </ul>
                     </div>
                     <div class="btn-group">
